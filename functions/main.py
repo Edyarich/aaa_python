@@ -2,7 +2,7 @@
 import argparse as ap
 import sys
 import csv
-from typing import List, Tuple, Set, Dict, Any, Type, Optional
+from typing import List, Tuple, Set, Dict, Any, Type
 
 
 def read_csv(filename: str, **csv_options) -> List[List[str]]:
@@ -17,7 +17,7 @@ def read_csv(filename: str, **csv_options) -> List[List[str]]:
     """
     with open(filename, 'r', encoding='utf-8') as fd:
         reader = csv.reader(fd, **csv_options)
-        data_read = [row for row in reader]
+        data_read = list(reader)
 
     return data_read
 
@@ -304,6 +304,6 @@ def get_parser() -> ap.ArgumentParser:
 
 
 if __name__ == '__main__':
-    parser = get_parser()
-    args = parser.parse_args()
-    args.func(args)
+    my_parser = get_parser()
+    arguments = my_parser.parse_args()
+    arguments.func(arguments)
