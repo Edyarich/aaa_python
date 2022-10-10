@@ -3,6 +3,8 @@ import argparse as ap
 import sys
 import csv
 from typing import List, Tuple, Set, Dict, Any, Type
+from collections import defaultdict
+from math import inf
 
 
 def read_csv(filename: str, **csv_options) -> List[List[str]]:
@@ -81,19 +83,14 @@ def get_department_structure(df: List[List[Any]],
         The dictionary with keys equal to department names and values equal
         to set of teams included in certain department
     """
-    departments_and_teams = {}
+    departments_and_teams = defaultdict(set)
     dep_ind = header['Департамент']
     team_ind = header['Отдел']
 
     for df_row in df:
         department = df_row[dep_ind]
         team = df_row[team_ind]
-
-        if departments_and_teams.get(department) is None:
-            departments_and_teams[department] = set()
-
-        if team not in departments_and_teams[department]:
-            departments_and_teams[department].add(team)
+        departments_and_teams[department].add(team)
 
     return departments_and_teams
 
@@ -142,19 +139,19 @@ def get_department_report(df: List[List[Any]],
                                  'avg': float},
              ... }
     """
-    departments_and_info = {}
+    departments_and_info = defaultdict(dict)
     dep_ind = header['Департамент']
     salary_ind = header['Оклад']
     def_info = {'count': 0,
-                'min': float('inf'),
-                'max': float('-inf'),
+                'min': inf,
+                'max': -inf,
                 'avg': 0}
 
     for df_row in df:
         department = df_row[dep_ind]
         salary = df_row[salary_ind]
 
-        if departments_and_info.get(department) is None:
+        if department not in departments_and_info:
             departments_and_info[department] = def_info.copy()
 
         departments_and_info[department]['count'] += 1
@@ -172,7 +169,8 @@ def get_department_report(df: List[List[Any]],
 
 
 def print_department_report(report: Dict[str, Dict[str, int]],
-                            filename: str) -> None:
+                            filename: str,
+                            delimiter: str) -> None:
     """
     Print department report
     :param report: Dict[str, int]
@@ -184,6 +182,8 @@ def print_department_report(report: Dict[str, Dict[str, int]],
              ... }
     :param filename: str
         Output file or None (then filename == sys.stdout)
+    :param delimiter: str
+        Delimiter which is used in csv file
     :return: None
     """
     if len(report) == 0:
@@ -196,10 +196,15 @@ def print_department_report(report: Dict[str, Dict[str, int]],
     header_format_str = '{:<32} {:<8} {:<16} {:<16} {:<16}'
     format_str = '{:<32} {:<8} {:<16} {:<16} {:.1f}'
 
+    if fd != sys.stdout:
+        header_format_str = delimiter.join(['{}']*(len(header)+1))
+        format_str = header_format_str
+
     print(header_format_str.format('Department', *header), file=fd)
+
     for dep, info in report.items():
-        info = info.values()
-        print(format_str.format(dep, *info), file=fd)
+        info_values = info.values()
+        print(format_str.format(dep, *info_values), file=fd)
 
     if fd != sys.stdout:
         fd.close()
@@ -259,7 +264,7 @@ def key_func(args: ap.Namespace) -> None:
             dep_report = get_department_report(df, header)
             out_filename = sys.stdout.name if args.command_num == 2 \
                 else args.output.name
-            print_department_report(dep_report, out_filename)
+            print_department_report(dep_report, out_filename, args.delimiter)
 
     else:
         print('Wrong command_num. See --help for details')
@@ -270,14 +275,14 @@ def get_parser() -> ap.ArgumentParser:
     Build parser for the task
     :return parser: argparse.ArgumentParser
     """
-    HELP_STR = 'Выберите действие, введя соответсвующее число: ' + \
+    help_str = 'Выберите действие, введя соответсвующее число: ' + \
                '1 - Вывести в понятном виде иерархию команд, ' + \
                'т.е. департамент и все команды, которые входят в него\n' + \
                '2 - Вывести сводный отчёт по департаментам: ' + \
                'название, численность, "вилка" зарплат в виде мин – макс, ' + \
                'среднюю зарплату\n' + \
                '3 - Сохранить сводный отчёт из предыдущего пункта в виде csv-файла'
-    parser = ap.ArgumentParser(description=HELP_STR)
+    parser = ap.ArgumentParser(description=help_str)
     parser.add_argument('command_num', type=int,
                         help='Номер команды')
     parser.add_argument('csv_file',
