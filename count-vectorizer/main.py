@@ -26,22 +26,22 @@ class CountVectorizer:
         :return count_matrix: List[List[int]]
             Document-term matrix.
         """
-        words_set = set()
-        words_list = []
+        unique_words = set()
+        ordered_words = []
         doc_term_matrix = []
 
         # Building words set
         for sent in text:
             for word in sent.lower().split():
-                if word not in words_set:
-                    words_list.append(word)
-                    words_set.add(word)
+                if word not in unique_words:
+                    ordered_words.append(word)
+                    unique_words.add(word)
 
-        self.feature_names = words_list
+        self.feature_names = ordered_words
 
         # Building document term matrix
         for sent in text:
-            counter = dict.fromkeys(words_list, 0)
+            counter = dict.fromkeys(ordered_words, 0)
             for word in sent.lower().split():
                 counter[word] += 1
 

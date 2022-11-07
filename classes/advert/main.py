@@ -1,8 +1,7 @@
 """ Advert class """
 import json
-from collections import namedtuple
 from keyword import iskeyword
-from typing import Optional
+from collections import namedtuple
 
 
 class ColorizeMixin:
@@ -10,12 +9,10 @@ class ColorizeMixin:
     Mixin for colorizing advertisement info
     """
 
-    def __init__(self, color_code: Optional[int]):
-        self.repr_color_code = 30 if color_code is None else color_code
-
     def __repr__(self):
+        color_code = self.repr_color_code
         repr_str = super().__repr__()
-        return f"\033[1:{self.repr_color_code}:48m{repr_str}\033[00m"
+        return f"\033[1:{color_code}:48m{repr_str}\033[00m"
 
     def func(self):
         """
@@ -24,28 +21,38 @@ class ColorizeMixin:
         """
 
 
-class Advert:
+class JSONParser:
     """
-    Stores information about advertisement
+    Set fields to object from dict
     """
-
-    def __init__(self, json_dict: dict):
-        Advert._create_attributes(self, json_dict)
-        self._check_title()
-        self._check_price()
-
-    @staticmethod
-    def _create_attributes(ref, dct: dict) -> None:
+    def __call__(self, obj: object, dct: dict) -> None:
         for key, val in dct.items():
             if iskeyword(key):
                 key += '_'
 
             if isinstance(val, dict):
                 key_type = namedtuple(f'{key}', val.keys())
-                setattr(ref, key, key_type(**val))
-                Advert._create_attributes(getattr(ref, key), val)
-            elif not hasattr(ref, key):
-                setattr(ref, key, val)
+                setattr(obj, key, key_type(**val))
+                self.__call__(getattr(obj, key), val)
+            elif not hasattr(obj, key):
+                setattr(obj, key, val)
+
+    def func(self):
+        """
+        Fictitious method to pass Pylint refactor problem
+        :return: None
+        """
+
+
+class BaseAdvert:
+    """
+    Stores information about advertisement
+    """
+
+    def __init__(self, json_dict: dict):
+        dict_parser = JSONParser()
+        dict_parser(self, json_dict)
+        self._check_title()
 
     def _check_title(self) -> None:
         if not hasattr(self, 'title'):
@@ -77,14 +84,14 @@ class Advert:
         return f"{getattr(self, 'title')} | {self.price} ₽"
 
 
-class ColorizedAdvert(ColorizeMixin, Advert):
+class Advert(ColorizeMixin, BaseAdvert):
     """
     Advertisement with colorized text
     """
 
-    def __init__(self, json_dict: dict, color_code: Optional[int] = None):
-        Advert.__init__(self, json_dict)
-        ColorizeMixin.__init__(self, color_code)
+    def __init__(self, json_dict: dict):
+        BaseAdvert.__init__(self, json_dict)
+        ColorizeMixin.__init__(self)
 
     def func(self):
         """
@@ -109,7 +116,8 @@ if __name__ == '__main__':
         "location": {
             "address": "сельское поселение Ельдигинское, \
                 поселок санатория Тишково, 25"
-        }
+        },
+        "repr_color_code": 32
     }"""
     IPHONE_STR = """{
         "title": "iPhone X",
@@ -124,9 +132,9 @@ if __name__ == '__main__':
     corgi = json.loads(CORGI_STR)
     iphone = json.loads(IPHONE_STR)
 
-    lesson_ad = Advert(lesson)
-    corgi_ad = ColorizedAdvert(corgi, 32)
-    iphone_ad = Advert(iphone)
+    lesson_ad = BaseAdvert(lesson)
+    corgi_ad = Advert(corgi)
+    iphone_ad = BaseAdvert(iphone)
 
     print(lesson_ad)
     print(lesson_ad.location.address)
@@ -148,6 +156,6 @@ if __name__ == '__main__':
             "price": -1
         }"""
         bad_iphone = json.loads(BAD_IPHONE_STR)
-        bad_iphone_ad = Advert(bad_iphone)
+        bad_iphone_ad = BaseAdvert(bad_iphone)
     except ValueError as err:
         print("Incorrect advertisement wasn't created!")

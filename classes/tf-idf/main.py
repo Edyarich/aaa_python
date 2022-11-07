@@ -71,8 +71,10 @@ class TfidfTransformer:
         freq_mat = []
 
         for count_row in count_matrix:
-            freq_mat.append(
-                list(map(lambda count: count / sum(count_row), count_row)))
+            k_words = sum(count_row)
+            freq_mat.append([count / k_words for count in count_row])
+            # freq_mat.append(
+            #     list(map(lambda count: count / k_words, count_row)))
 
         return freq_mat
 
