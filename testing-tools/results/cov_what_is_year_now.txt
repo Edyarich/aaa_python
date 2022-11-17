@@ -1,0 +1,1160 @@
+============================= test session starts ==============================
+platform linux -- Python 3.8.10, pytest-7.1.3, pluggy-1.0.0
+rootdir: /home/eduard/PycharmProjects/aaa_python/testing-tools
+plugins: hypothesis-6.57.1, cov-4.0.0, anyio-3.6.1
+collected 17 items
+
+tests/test_morse.py ......                                               [ 35%]
+tests/test_onehot_pytest.py ....                                         [ 58%]
+tests/test_onehot_unit.py ....                                           [ 82%]
+tests/test_what_is_year_now.py FFF                                       [100%]
+
+=================================== FAILURES ===================================
+___________________________ TestWIYN.test_dmy_format ___________________________
+
+self = <urllib.request.HTTPSHandler object at 0x7f60ce608610>
+http_class = <class 'http.client.HTTPSConnection'>
+req = <urllib.request.Request object at 0x7f60ce608310>
+http_conn_args = {'check_hostname': None, 'context': None}
+host = 'worldtimeapi.org'
+h = <http.client.HTTPSConnection object at 0x7f60ce608850>
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update({k: v for k, v in req.headers.items()
+                        if k not in headers})
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = {name.title(): val for name, val in headers.items()}
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+>               h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+
+/usr/lib/python3.8/urllib/request.py:1354: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce608850>, method = 'GET'
+url = '/api/timezone/Europe/Moscow', body = None
+headers = {'Connection': 'close', 'Host': 'worldtimeapi.org', 'User-Agent': 'Python-urllib/3.8'}
+
+    def request(self, method, url, body=None, headers={}, *,
+                encode_chunked=False):
+        """Send a complete request to the server."""
+>       self._send_request(method, url, body, headers, encode_chunked)
+
+/usr/lib/python3.8/http/client.py:1256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce608850>, method = 'GET'
+url = '/api/timezone/Europe/Moscow', body = None
+headers = {'Connection': 'close', 'Host': 'worldtimeapi.org', 'User-Agent': 'Python-urllib/3.8'}
+encode_chunked = False
+
+    def _send_request(self, method, url, body, headers, encode_chunked):
+        # Honor explicitly requested Host: and Accept-Encoding: headers.
+        header_names = frozenset(k.lower() for k in headers)
+        skips = {}
+        if 'host' in header_names:
+            skips['skip_host'] = 1
+        if 'accept-encoding' in header_names:
+            skips['skip_accept_encoding'] = 1
+    
+        self.putrequest(method, url, **skips)
+    
+        # chunked encoding will happen if HTTP/1.1 is used and either
+        # the caller passes encode_chunked=True or the following
+        # conditions hold:
+        # 1. content-length has not been explicitly set
+        # 2. the body is a file or iterable, but not a str or bytes-like
+        # 3. Transfer-Encoding has NOT been explicitly set by the caller
+    
+        if 'content-length' not in header_names:
+            # only chunk body if not explicitly set for backwards
+            # compatibility, assuming the client code is already handling the
+            # chunking
+            if 'transfer-encoding' not in header_names:
+                # if content-length cannot be automatically determined, fall
+                # back to chunked encoding
+                encode_chunked = False
+                content_length = self._get_content_length(body, method)
+                if content_length is None:
+                    if body is not None:
+                        if self.debuglevel > 0:
+                            print('Unable to determine size of %r' % body)
+                        encode_chunked = True
+                        self.putheader('Transfer-Encoding', 'chunked')
+                else:
+                    self.putheader('Content-Length', str(content_length))
+        else:
+            encode_chunked = False
+    
+        for hdr, value in headers.items():
+            self.putheader(hdr, value)
+        if isinstance(body, str):
+            # RFC 2616 Section 3.7.1 says that text default has a
+            # default charset of iso-8859-1.
+            body = _encode(body, 'body')
+>       self.endheaders(body, encode_chunked=encode_chunked)
+
+/usr/lib/python3.8/http/client.py:1302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce608850>
+message_body = None
+
+    def endheaders(self, message_body=None, *, encode_chunked=False):
+        """Indicate that the last header line has been sent to the server.
+    
+        This method sends the request to the server.  The optional message_body
+        argument can be used to pass a message body associated with the
+        request.
+        """
+        if self.__state == _CS_REQ_STARTED:
+            self.__state = _CS_REQ_SENT
+        else:
+            raise CannotSendHeader()
+>       self._send_output(message_body, encode_chunked=encode_chunked)
+
+/usr/lib/python3.8/http/client.py:1251: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce608850>
+message_body = None, encode_chunked = False
+
+    def _send_output(self, message_body=None, encode_chunked=False):
+        """Send the currently buffered request and clear the buffer.
+    
+        Appends an extra \\r\\n to the buffer.
+        A message_body may be specified, to be appended to the request.
+        """
+        self._buffer.extend((b"", b""))
+        msg = b"\r\n".join(self._buffer)
+        del self._buffer[:]
+>       self.send(msg)
+
+/usr/lib/python3.8/http/client.py:1011: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce608850>
+data = b'GET /api/timezone/Europe/Moscow HTTP/1.1\r\nAccept-Encoding: identity\r\nHost: worldtimeapi.org\r\nUser-Agent: Python-urllib/3.8\r\nConnection: close\r\n\r\n'
+
+    def send(self, data):
+        """Send `data' to the server.
+        ``data`` can be a string object, a bytes object, an array object, a
+        file-like object that supports a .read() method, or an iterable object.
+        """
+    
+        if self.sock is None:
+            if self.auto_open:
+>               self.connect()
+
+/usr/lib/python3.8/http/client.py:951: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce608850>
+
+    def connect(self):
+        "Connect to a host on a given (SSL) port."
+    
+        super().connect()
+    
+        if self._tunnel_host:
+            server_hostname = self._tunnel_host
+        else:
+            server_hostname = self.host
+    
+>       self.sock = self._context.wrap_socket(self.sock,
+                                              server_hostname=server_hostname)
+
+/usr/lib/python3.8/http/client.py:1425: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ssl.SSLContext object at 0x7f60cf56dc40>
+sock = <socket.socket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+server_side = False, do_handshake_on_connect = True, suppress_ragged_eofs = True
+server_hostname = 'worldtimeapi.org', session = None
+
+    def wrap_socket(self, sock, server_side=False,
+                    do_handshake_on_connect=True,
+                    suppress_ragged_eofs=True,
+                    server_hostname=None, session=None):
+        # SSLSocket class handles server_hostname encoding before it calls
+        # ctx._wrap_socket()
+>       return self.sslsocket_class._create(
+            sock=sock,
+            server_side=server_side,
+            do_handshake_on_connect=do_handshake_on_connect,
+            suppress_ragged_eofs=suppress_ragged_eofs,
+            server_hostname=server_hostname,
+            context=self,
+            session=session
+        )
+
+/usr/lib/python3.8/ssl.py:500: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'ssl.SSLSocket'>
+sock = <socket.socket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+server_side = False, do_handshake_on_connect = True, suppress_ragged_eofs = True
+server_hostname = 'worldtimeapi.org'
+context = <ssl.SSLContext object at 0x7f60cf56dc40>, session = None
+
+    @classmethod
+    def _create(cls, sock, server_side=False, do_handshake_on_connect=True,
+                suppress_ragged_eofs=True, server_hostname=None,
+                context=None, session=None):
+        if sock.getsockopt(SOL_SOCKET, SO_TYPE) != SOCK_STREAM:
+            raise NotImplementedError("only stream sockets are supported")
+        if server_side:
+            if server_hostname:
+                raise ValueError("server_hostname can only be specified "
+                                 "in client mode")
+            if session is not None:
+                raise ValueError("session can only be specified in "
+                                 "client mode")
+        if context.check_hostname and not server_hostname:
+            raise ValueError("check_hostname requires server_hostname")
+    
+        kwargs = dict(
+            family=sock.family, type=sock.type, proto=sock.proto,
+            fileno=sock.fileno()
+        )
+        self = cls.__new__(cls, **kwargs)
+        super(SSLSocket, self).__init__(**kwargs)
+        self.settimeout(sock.gettimeout())
+        sock.detach()
+    
+        self._context = context
+        self._session = session
+        self._closed = False
+        self._sslobj = None
+        self.server_side = server_side
+        self.server_hostname = context._encode_hostname(server_hostname)
+        self.do_handshake_on_connect = do_handshake_on_connect
+        self.suppress_ragged_eofs = suppress_ragged_eofs
+    
+        # See if we are connected
+        try:
+            self.getpeername()
+        except OSError as e:
+            if e.errno != errno.ENOTCONN:
+                raise
+            connected = False
+        else:
+            connected = True
+    
+        self._connected = connected
+        if connected:
+            # create the SSL object
+            try:
+                self._sslobj = self._context._wrap_socket(
+                    self, server_side, self.server_hostname,
+                    owner=self, session=self._session,
+                )
+                if do_handshake_on_connect:
+                    timeout = self.gettimeout()
+                    if timeout == 0.0:
+                        # non-blocking
+                        raise ValueError("do_handshake_on_connect should not be specified for non-blocking sockets")
+>                   self.do_handshake()
+
+/usr/lib/python3.8/ssl.py:1040: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ssl.SSLSocket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+block = False
+
+    @_sslcopydoc
+    def do_handshake(self, block=False):
+        self._check_connected()
+        timeout = self.gettimeout()
+        try:
+            if timeout == 0.0 and block:
+                self.settimeout(None)
+>           self._sslobj.do_handshake()
+E           ssl.SSLEOFError: EOF occurred in violation of protocol (_ssl.c:1131)
+
+/usr/lib/python3.8/ssl.py:1309: SSLEOFError
+
+During handling of the above exception, another exception occurred:
+
+self = <test_what_is_year_now.TestWIYN testMethod=test_dmy_format>
+json_dict = <MagicMock name='load' id='140053755970128'>
+
+    @patch('what_is_year_now.json.load')
+    def test_dmy_format(self, json_dict: MagicMock) -> None:
+        """Test the correct work with DD.MM.YYYY date format"""
+        json_dict.return_value = {"datetime": "17.11.1999"}
+        time.sleep(REQUEST_DELAY)
+>       response = wiyn.what_is_year_now()
+
+tests/test_what_is_year_now.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+what_is_year_now.py:25: in what_is_year_now
+    with urllib.request.urlopen(API_URL) as resp:
+/usr/lib/python3.8/urllib/request.py:222: in urlopen
+    return opener.open(url, data, timeout)
+/usr/lib/python3.8/urllib/request.py:525: in open
+    response = self._open(req, data)
+/usr/lib/python3.8/urllib/request.py:542: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+/usr/lib/python3.8/urllib/request.py:502: in _call_chain
+    result = func(*args)
+/usr/lib/python3.8/urllib/request.py:1397: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <urllib.request.HTTPSHandler object at 0x7f60ce608610>
+http_class = <class 'http.client.HTTPSConnection'>
+req = <urllib.request.Request object at 0x7f60ce608310>
+http_conn_args = {'check_hostname': None, 'context': None}
+host = 'worldtimeapi.org'
+h = <http.client.HTTPSConnection object at 0x7f60ce608850>
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update({k: v for k, v in req.headers.items()
+                        if k not in headers})
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = {name.title(): val for name, val in headers.items()}
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+            except OSError as err: # timeout error
+>               raise URLError(err)
+E               urllib.error.URLError: <urlopen error EOF occurred in violation of protocol (_ssl.c:1131)>
+
+/usr/lib/python3.8/urllib/request.py:1357: URLError
+_______________________ TestWIYN.test_exception_raising ________________________
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update({k: v for k, v in req.headers.items()
+                        if k not in headers})
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = {name.title(): val for name, val in headers.items()}
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+>               h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+
+/usr/lib/python3.8/urllib/request.py:1354: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce5712e0>, method = 'GET'
+url = '/api/timezone/Europe/Moscow', body = None
+headers = {'Connection': 'close', 'Host': 'worldtimeapi.org', 'User-Agent': 'Python-urllib/3.8'}
+
+    def request(self, method, url, body=None, headers={}, *,
+                encode_chunked=False):
+        """Send a complete request to the server."""
+>       self._send_request(method, url, body, headers, encode_chunked)
+
+/usr/lib/python3.8/http/client.py:1256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce5712e0>, method = 'GET'
+url = '/api/timezone/Europe/Moscow', body = None
+headers = {'Connection': 'close', 'Host': 'worldtimeapi.org', 'User-Agent': 'Python-urllib/3.8'}
+encode_chunked = False
+
+    def _send_request(self, method, url, body, headers, encode_chunked):
+        # Honor explicitly requested Host: and Accept-Encoding: headers.
+        header_names = frozenset(k.lower() for k in headers)
+        skips = {}
+        if 'host' in header_names:
+            skips['skip_host'] = 1
+        if 'accept-encoding' in header_names:
+            skips['skip_accept_encoding'] = 1
+    
+        self.putrequest(method, url, **skips)
+    
+        # chunked encoding will happen if HTTP/1.1 is used and either
+        # the caller passes encode_chunked=True or the following
+        # conditions hold:
+        # 1. content-length has not been explicitly set
+        # 2. the body is a file or iterable, but not a str or bytes-like
+        # 3. Transfer-Encoding has NOT been explicitly set by the caller
+    
+        if 'content-length' not in header_names:
+            # only chunk body if not explicitly set for backwards
+            # compatibility, assuming the client code is already handling the
+            # chunking
+            if 'transfer-encoding' not in header_names:
+                # if content-length cannot be automatically determined, fall
+                # back to chunked encoding
+                encode_chunked = False
+                content_length = self._get_content_length(body, method)
+                if content_length is None:
+                    if body is not None:
+                        if self.debuglevel > 0:
+                            print('Unable to determine size of %r' % body)
+                        encode_chunked = True
+                        self.putheader('Transfer-Encoding', 'chunked')
+                else:
+                    self.putheader('Content-Length', str(content_length))
+        else:
+            encode_chunked = False
+    
+        for hdr, value in headers.items():
+            self.putheader(hdr, value)
+        if isinstance(body, str):
+            # RFC 2616 Section 3.7.1 says that text default has a
+            # default charset of iso-8859-1.
+            body = _encode(body, 'body')
+>       self.endheaders(body, encode_chunked=encode_chunked)
+
+/usr/lib/python3.8/http/client.py:1302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce5712e0>
+message_body = None
+
+    def endheaders(self, message_body=None, *, encode_chunked=False):
+        """Indicate that the last header line has been sent to the server.
+    
+        This method sends the request to the server.  The optional message_body
+        argument can be used to pass a message body associated with the
+        request.
+        """
+        if self.__state == _CS_REQ_STARTED:
+            self.__state = _CS_REQ_SENT
+        else:
+            raise CannotSendHeader()
+>       self._send_output(message_body, encode_chunked=encode_chunked)
+
+/usr/lib/python3.8/http/client.py:1251: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce5712e0>
+message_body = None, encode_chunked = False
+
+    def _send_output(self, message_body=None, encode_chunked=False):
+        """Send the currently buffered request and clear the buffer.
+    
+        Appends an extra \\r\\n to the buffer.
+        A message_body may be specified, to be appended to the request.
+        """
+        self._buffer.extend((b"", b""))
+        msg = b"\r\n".join(self._buffer)
+        del self._buffer[:]
+>       self.send(msg)
+
+/usr/lib/python3.8/http/client.py:1011: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce5712e0>
+data = b'GET /api/timezone/Europe/Moscow HTTP/1.1\r\nAccept-Encoding: identity\r\nHost: worldtimeapi.org\r\nUser-Agent: Python-urllib/3.8\r\nConnection: close\r\n\r\n'
+
+    def send(self, data):
+        """Send `data' to the server.
+        ``data`` can be a string object, a bytes object, an array object, a
+        file-like object that supports a .read() method, or an iterable object.
+        """
+    
+        if self.sock is None:
+            if self.auto_open:
+>               self.connect()
+
+/usr/lib/python3.8/http/client.py:951: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce5712e0>
+
+    def connect(self):
+        "Connect to a host on a given (SSL) port."
+    
+        super().connect()
+    
+        if self._tunnel_host:
+            server_hostname = self._tunnel_host
+        else:
+            server_hostname = self.host
+    
+>       self.sock = self._context.wrap_socket(self.sock,
+                                              server_hostname=server_hostname)
+
+/usr/lib/python3.8/http/client.py:1425: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ssl.SSLContext object at 0x7f60cf56dcc0>
+sock = <socket.socket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+server_side = False, do_handshake_on_connect = True, suppress_ragged_eofs = True
+server_hostname = 'worldtimeapi.org', session = None
+
+    def wrap_socket(self, sock, server_side=False,
+                    do_handshake_on_connect=True,
+                    suppress_ragged_eofs=True,
+                    server_hostname=None, session=None):
+        # SSLSocket class handles server_hostname encoding before it calls
+        # ctx._wrap_socket()
+>       return self.sslsocket_class._create(
+            sock=sock,
+            server_side=server_side,
+            do_handshake_on_connect=do_handshake_on_connect,
+            suppress_ragged_eofs=suppress_ragged_eofs,
+            server_hostname=server_hostname,
+            context=self,
+            session=session
+        )
+
+/usr/lib/python3.8/ssl.py:500: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'ssl.SSLSocket'>
+sock = <socket.socket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+server_side = False, do_handshake_on_connect = True, suppress_ragged_eofs = True
+server_hostname = 'worldtimeapi.org'
+context = <ssl.SSLContext object at 0x7f60cf56dcc0>, session = None
+
+    @classmethod
+    def _create(cls, sock, server_side=False, do_handshake_on_connect=True,
+                suppress_ragged_eofs=True, server_hostname=None,
+                context=None, session=None):
+        if sock.getsockopt(SOL_SOCKET, SO_TYPE) != SOCK_STREAM:
+            raise NotImplementedError("only stream sockets are supported")
+        if server_side:
+            if server_hostname:
+                raise ValueError("server_hostname can only be specified "
+                                 "in client mode")
+            if session is not None:
+                raise ValueError("session can only be specified in "
+                                 "client mode")
+        if context.check_hostname and not server_hostname:
+            raise ValueError("check_hostname requires server_hostname")
+    
+        kwargs = dict(
+            family=sock.family, type=sock.type, proto=sock.proto,
+            fileno=sock.fileno()
+        )
+        self = cls.__new__(cls, **kwargs)
+        super(SSLSocket, self).__init__(**kwargs)
+        self.settimeout(sock.gettimeout())
+        sock.detach()
+    
+        self._context = context
+        self._session = session
+        self._closed = False
+        self._sslobj = None
+        self.server_side = server_side
+        self.server_hostname = context._encode_hostname(server_hostname)
+        self.do_handshake_on_connect = do_handshake_on_connect
+        self.suppress_ragged_eofs = suppress_ragged_eofs
+    
+        # See if we are connected
+        try:
+            self.getpeername()
+        except OSError as e:
+            if e.errno != errno.ENOTCONN:
+                raise
+            connected = False
+        else:
+            connected = True
+    
+        self._connected = connected
+        if connected:
+            # create the SSL object
+            try:
+                self._sslobj = self._context._wrap_socket(
+                    self, server_side, self.server_hostname,
+                    owner=self, session=self._session,
+                )
+                if do_handshake_on_connect:
+                    timeout = self.gettimeout()
+                    if timeout == 0.0:
+                        # non-blocking
+                        raise ValueError("do_handshake_on_connect should not be specified for non-blocking sockets")
+>                   self.do_handshake()
+
+/usr/lib/python3.8/ssl.py:1040: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ssl.SSLSocket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+block = False
+
+    @_sslcopydoc
+    def do_handshake(self, block=False):
+        self._check_connected()
+        timeout = self.gettimeout()
+        try:
+            if timeout == 0.0 and block:
+                self.settimeout(None)
+>           self._sslobj.do_handshake()
+E           ssl.SSLEOFError: EOF occurred in violation of protocol (_ssl.c:1131)
+
+/usr/lib/python3.8/ssl.py:1309: SSLEOFError
+
+During handling of the above exception, another exception occurred:
+
+self = <test_what_is_year_now.TestWIYN testMethod=test_exception_raising>
+json_dict = <MagicMock name='load' id='140053750338848'>
+
+    @patch('what_is_year_now.json.load')
+    def test_exception_raising(self, json_dict: MagicMock) -> None:
+        """Check exception raising for any other date format"""
+        json_dict.return_value = {"datetime": "17.11..1999"}
+        time.sleep(REQUEST_DELAY)
+>       self.assertRaises(ValueError, wiyn.what_is_year_now)
+
+tests/test_what_is_year_now.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+what_is_year_now.py:25: in what_is_year_now
+    with urllib.request.urlopen(API_URL) as resp:
+/usr/lib/python3.8/urllib/request.py:222: in urlopen
+    return opener.open(url, data, timeout)
+/usr/lib/python3.8/urllib/request.py:525: in open
+    response = self._open(req, data)
+/usr/lib/python3.8/urllib/request.py:542: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+/usr/lib/python3.8/urllib/request.py:502: in _call_chain
+    result = func(*args)
+/usr/lib/python3.8/urllib/request.py:1397: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update({k: v for k, v in req.headers.items()
+                        if k not in headers})
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = {name.title(): val for name, val in headers.items()}
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+            except OSError as err: # timeout error
+>               raise URLError(err)
+E               urllib.error.URLError: <urlopen error EOF occurred in violation of protocol (_ssl.c:1131)>
+
+/usr/lib/python3.8/urllib/request.py:1357: URLError
+___________________________ TestWIYN.test_ymd_format ___________________________
+
+self = <urllib.request.HTTPSHandler object at 0x7f60ce608610>
+http_class = <class 'http.client.HTTPSConnection'>
+req = <urllib.request.Request object at 0x7f60ce3e7df0>
+http_conn_args = {'check_hostname': None, 'context': None}
+host = 'worldtimeapi.org'
+h = <http.client.HTTPSConnection object at 0x7f60ce563d00>
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update({k: v for k, v in req.headers.items()
+                        if k not in headers})
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = {name.title(): val for name, val in headers.items()}
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+>               h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+
+/usr/lib/python3.8/urllib/request.py:1354: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce563d00>, method = 'GET'
+url = '/api/timezone/Europe/Moscow', body = None
+headers = {'Connection': 'close', 'Host': 'worldtimeapi.org', 'User-Agent': 'Python-urllib/3.8'}
+
+    def request(self, method, url, body=None, headers={}, *,
+                encode_chunked=False):
+        """Send a complete request to the server."""
+>       self._send_request(method, url, body, headers, encode_chunked)
+
+/usr/lib/python3.8/http/client.py:1256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce563d00>, method = 'GET'
+url = '/api/timezone/Europe/Moscow', body = None
+headers = {'Connection': 'close', 'Host': 'worldtimeapi.org', 'User-Agent': 'Python-urllib/3.8'}
+encode_chunked = False
+
+    def _send_request(self, method, url, body, headers, encode_chunked):
+        # Honor explicitly requested Host: and Accept-Encoding: headers.
+        header_names = frozenset(k.lower() for k in headers)
+        skips = {}
+        if 'host' in header_names:
+            skips['skip_host'] = 1
+        if 'accept-encoding' in header_names:
+            skips['skip_accept_encoding'] = 1
+    
+        self.putrequest(method, url, **skips)
+    
+        # chunked encoding will happen if HTTP/1.1 is used and either
+        # the caller passes encode_chunked=True or the following
+        # conditions hold:
+        # 1. content-length has not been explicitly set
+        # 2. the body is a file or iterable, but not a str or bytes-like
+        # 3. Transfer-Encoding has NOT been explicitly set by the caller
+    
+        if 'content-length' not in header_names:
+            # only chunk body if not explicitly set for backwards
+            # compatibility, assuming the client code is already handling the
+            # chunking
+            if 'transfer-encoding' not in header_names:
+                # if content-length cannot be automatically determined, fall
+                # back to chunked encoding
+                encode_chunked = False
+                content_length = self._get_content_length(body, method)
+                if content_length is None:
+                    if body is not None:
+                        if self.debuglevel > 0:
+                            print('Unable to determine size of %r' % body)
+                        encode_chunked = True
+                        self.putheader('Transfer-Encoding', 'chunked')
+                else:
+                    self.putheader('Content-Length', str(content_length))
+        else:
+            encode_chunked = False
+    
+        for hdr, value in headers.items():
+            self.putheader(hdr, value)
+        if isinstance(body, str):
+            # RFC 2616 Section 3.7.1 says that text default has a
+            # default charset of iso-8859-1.
+            body = _encode(body, 'body')
+>       self.endheaders(body, encode_chunked=encode_chunked)
+
+/usr/lib/python3.8/http/client.py:1302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce563d00>
+message_body = None
+
+    def endheaders(self, message_body=None, *, encode_chunked=False):
+        """Indicate that the last header line has been sent to the server.
+    
+        This method sends the request to the server.  The optional message_body
+        argument can be used to pass a message body associated with the
+        request.
+        """
+        if self.__state == _CS_REQ_STARTED:
+            self.__state = _CS_REQ_SENT
+        else:
+            raise CannotSendHeader()
+>       self._send_output(message_body, encode_chunked=encode_chunked)
+
+/usr/lib/python3.8/http/client.py:1251: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce563d00>
+message_body = None, encode_chunked = False
+
+    def _send_output(self, message_body=None, encode_chunked=False):
+        """Send the currently buffered request and clear the buffer.
+    
+        Appends an extra \\r\\n to the buffer.
+        A message_body may be specified, to be appended to the request.
+        """
+        self._buffer.extend((b"", b""))
+        msg = b"\r\n".join(self._buffer)
+        del self._buffer[:]
+>       self.send(msg)
+
+/usr/lib/python3.8/http/client.py:1011: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce563d00>
+data = b'GET /api/timezone/Europe/Moscow HTTP/1.1\r\nAccept-Encoding: identity\r\nHost: worldtimeapi.org\r\nUser-Agent: Python-urllib/3.8\r\nConnection: close\r\n\r\n'
+
+    def send(self, data):
+        """Send `data' to the server.
+        ``data`` can be a string object, a bytes object, an array object, a
+        file-like object that supports a .read() method, or an iterable object.
+        """
+    
+        if self.sock is None:
+            if self.auto_open:
+>               self.connect()
+
+/usr/lib/python3.8/http/client.py:951: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.client.HTTPSConnection object at 0x7f60ce563d00>
+
+    def connect(self):
+        "Connect to a host on a given (SSL) port."
+    
+        super().connect()
+    
+        if self._tunnel_host:
+            server_hostname = self._tunnel_host
+        else:
+            server_hostname = self.host
+    
+>       self.sock = self._context.wrap_socket(self.sock,
+                                              server_hostname=server_hostname)
+
+/usr/lib/python3.8/http/client.py:1425: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ssl.SSLContext object at 0x7f60ce507c40>
+sock = <socket.socket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+server_side = False, do_handshake_on_connect = True, suppress_ragged_eofs = True
+server_hostname = 'worldtimeapi.org', session = None
+
+    def wrap_socket(self, sock, server_side=False,
+                    do_handshake_on_connect=True,
+                    suppress_ragged_eofs=True,
+                    server_hostname=None, session=None):
+        # SSLSocket class handles server_hostname encoding before it calls
+        # ctx._wrap_socket()
+>       return self.sslsocket_class._create(
+            sock=sock,
+            server_side=server_side,
+            do_handshake_on_connect=do_handshake_on_connect,
+            suppress_ragged_eofs=suppress_ragged_eofs,
+            server_hostname=server_hostname,
+            context=self,
+            session=session
+        )
+
+/usr/lib/python3.8/ssl.py:500: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'ssl.SSLSocket'>
+sock = <socket.socket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+server_side = False, do_handshake_on_connect = True, suppress_ragged_eofs = True
+server_hostname = 'worldtimeapi.org'
+context = <ssl.SSLContext object at 0x7f60ce507c40>, session = None
+
+    @classmethod
+    def _create(cls, sock, server_side=False, do_handshake_on_connect=True,
+                suppress_ragged_eofs=True, server_hostname=None,
+                context=None, session=None):
+        if sock.getsockopt(SOL_SOCKET, SO_TYPE) != SOCK_STREAM:
+            raise NotImplementedError("only stream sockets are supported")
+        if server_side:
+            if server_hostname:
+                raise ValueError("server_hostname can only be specified "
+                                 "in client mode")
+            if session is not None:
+                raise ValueError("session can only be specified in "
+                                 "client mode")
+        if context.check_hostname and not server_hostname:
+            raise ValueError("check_hostname requires server_hostname")
+    
+        kwargs = dict(
+            family=sock.family, type=sock.type, proto=sock.proto,
+            fileno=sock.fileno()
+        )
+        self = cls.__new__(cls, **kwargs)
+        super(SSLSocket, self).__init__(**kwargs)
+        self.settimeout(sock.gettimeout())
+        sock.detach()
+    
+        self._context = context
+        self._session = session
+        self._closed = False
+        self._sslobj = None
+        self.server_side = server_side
+        self.server_hostname = context._encode_hostname(server_hostname)
+        self.do_handshake_on_connect = do_handshake_on_connect
+        self.suppress_ragged_eofs = suppress_ragged_eofs
+    
+        # See if we are connected
+        try:
+            self.getpeername()
+        except OSError as e:
+            if e.errno != errno.ENOTCONN:
+                raise
+            connected = False
+        else:
+            connected = True
+    
+        self._connected = connected
+        if connected:
+            # create the SSL object
+            try:
+                self._sslobj = self._context._wrap_socket(
+                    self, server_side, self.server_hostname,
+                    owner=self, session=self._session,
+                )
+                if do_handshake_on_connect:
+                    timeout = self.gettimeout()
+                    if timeout == 0.0:
+                        # non-blocking
+                        raise ValueError("do_handshake_on_connect should not be specified for non-blocking sockets")
+>                   self.do_handshake()
+
+/usr/lib/python3.8/ssl.py:1040: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ssl.SSLSocket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+block = False
+
+    @_sslcopydoc
+    def do_handshake(self, block=False):
+        self._check_connected()
+        timeout = self.gettimeout()
+        try:
+            if timeout == 0.0 and block:
+                self.settimeout(None)
+>           self._sslobj.do_handshake()
+E           ConnectionResetError: [Errno 104] Connection reset by peer
+
+/usr/lib/python3.8/ssl.py:1309: ConnectionResetError
+
+During handling of the above exception, another exception occurred:
+
+self = <test_what_is_year_now.TestWIYN testMethod=test_ymd_format>
+json_dict = <MagicMock name='load' id='140053753790176'>
+
+    @patch('what_is_year_now.json.load')
+    def test_ymd_format(self, json_dict: MagicMock) -> None:
+        """Test the correct work with YYYY-MM-DD date format"""
+        json_dict.return_value = {"datetime": "1999-11-17"}
+        time.sleep(REQUEST_DELAY)
+>       response = wiyn.what_is_year_now()
+
+tests/test_what_is_year_now.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+what_is_year_now.py:25: in what_is_year_now
+    with urllib.request.urlopen(API_URL) as resp:
+/usr/lib/python3.8/urllib/request.py:222: in urlopen
+    return opener.open(url, data, timeout)
+/usr/lib/python3.8/urllib/request.py:525: in open
+    response = self._open(req, data)
+/usr/lib/python3.8/urllib/request.py:542: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+/usr/lib/python3.8/urllib/request.py:502: in _call_chain
+    result = func(*args)
+/usr/lib/python3.8/urllib/request.py:1397: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <urllib.request.HTTPSHandler object at 0x7f60ce608610>
+http_class = <class 'http.client.HTTPSConnection'>
+req = <urllib.request.Request object at 0x7f60ce3e7df0>
+http_conn_args = {'check_hostname': None, 'context': None}
+host = 'worldtimeapi.org'
+h = <http.client.HTTPSConnection object at 0x7f60ce563d00>
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update({k: v for k, v in req.headers.items()
+                        if k not in headers})
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = {name.title(): val for name, val in headers.items()}
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+            except OSError as err: # timeout error
+>               raise URLError(err)
+E               urllib.error.URLError: <urlopen error [Errno 104] Connection reset by peer>
+
+/usr/lib/python3.8/urllib/request.py:1357: URLError
+
+---------- coverage: platform linux, python 3.8.10-final-0 -----------
+Name                             Stmts   Miss  Cover
+----------------------------------------------------
+tests/test_morse.py                 13      0   100%
+tests/test_onehot_pytest.py         25      0   100%
+tests/test_onehot_unit.py           27      1    96%
+tests/test_what_is_year_now.py      28      2    93%
+----------------------------------------------------
+TOTAL                               93      3    97%
+
+=========================== short test summary info ============================
+FAILED tests/test_what_is_year_now.py::TestWIYN::test_dmy_format - urllib.err...
+FAILED tests/test_what_is_year_now.py::TestWIYN::test_exception_raising - url...
+FAILED tests/test_what_is_year_now.py::TestWIYN::test_ymd_format - urllib.err...
+======================== 3 failed, 14 passed in 11.05s =========================
