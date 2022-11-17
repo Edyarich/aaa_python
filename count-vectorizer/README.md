@@ -11,6 +11,7 @@
 - если умеешь, то напиши проверки/тесты
 
 ## Примеры
+```python
     corpus = [
         'Crock Pot Pasta Never boil pasta again',
         'Pasta Pomodoro Fresh ingredients Parmesan to taste'
@@ -23,3 +24,4 @@
     print(count_matrix)
     Out: [[1, 1, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1]]
+```

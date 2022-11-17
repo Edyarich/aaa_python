@@ -1,7 +1,7 @@
 # tf-idf
 ## Задание #1: count vectorizer
 Реализуйте класс CountVectorizer, имеющий метод `fit_transform`
-```
+```python
 corpus = [
     'Crock Pot Pasta Never boil pasta again',
     'Pasta Pomodoro Fresh ingredients Parmesan to taste'
@@ -20,7 +20,7 @@ Out: [[1, 1, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0],
 
 ## Задание #2: term frequency
 Реализуйте функцию `tf_transform`
-```
+```python
 count_matrix = [
     [1, 1, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1]
@@ -36,7 +36,7 @@ Out: [
 
 ## Задание #3: inverse document-frequency
 Реализуйте функцию `idf_transform`
-```
+```python
 count_matrix = [
     [1, 1, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1]
@@ -49,7 +49,7 @@ Out: [1.4, 1.4, 1.0, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4]
 
 ## Задание #4: tf-idf transformer
 Реализуйте класс `TfidfTransformer`, имеющий метод `fit_transform`
-```
+```python
 count_matrix = [
     [1, 1, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1]
@@ -66,7 +66,7 @@ Out: [
 
 ## Задание #5: tf-idf vectorizer
 Реализуйте класс `TfidfVectorizer`, имеющий метод `fit_transform`
-```
+```python
 corpus = [
     'Crock Pot Pasta Never boil pasta again',
     'Pasta Pomodoro Fresh ingredients Parmesan to taste'

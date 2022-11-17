@@ -1,6 +1,6 @@
 ## Задание #1: Pokemon/магический метод
 Дан класс `Pokemon`
-```
+```python
 class Pokemon:
     def __init__(self, name: str, poketype: str):
         self.name = name
@@ -10,7 +10,7 @@ class Pokemon:
         return f'{self.name}/{self.poketype}'
 ```
 Замените метод `to_str`
-```
+```python
 bulbasaur = Pokemon(name='Bulbasaur', poketype='grass')
 print(bulbasaur)
 Out: 'Bulbasaur/grass'
@@ -23,7 +23,7 @@ Out: 'Bulbasaur/grass'
 - fire => 🔥
 - water => 🌊
 - electric => ⚡
-```
+```python
 pikachu = Pokemon(name='Pikachu', category='electric')
 print(pikachu)
 Out: 'Pikachu/⚡'
