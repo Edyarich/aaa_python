@@ -1,3 +1,6 @@
 .idea/
 functions/draft.ipynb
 functions/temp.csv
+__pycache__/
+.mypy_cache
+.pytest_cache

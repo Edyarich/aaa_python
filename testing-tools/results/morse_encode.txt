@@ -1,0 +1,81 @@
+Trying:
+    decode('... --- ...')
+Expecting:
+    'SOS'
+ok
+Trying:
+    decode('')
+Expecting:
+    ''
+ok
+Trying:
+    long_morse_msg = '- .... .  --.- ..- .. -.-. -.-  -... .-. --- .--' +     ' -.  ..-. --- -..-  .--- ..- -- .--. ...  --- ...- . .-.  - .... .' +     '  .-.. .- --.. -.--  -.. --- --.'
+Expecting nothing
+ok
+Trying:
+    decode(long_morse_msg)
+Expecting:
+    'THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG'
+ok
+Trying:
+    decode('.... . .-.. .-.. --- --..--  .-- --- .-. .-.. -.. ..--..')
+Expecting:
+    'HELLO,WORLD?'
+ok
+Trying:
+    decode('-.--. -....- .-.-.- -....- -..-. -..-. -....- .-.-.- -....- -.--.-')
+Expecting:
+    '(-.-//-.-)'
+ok
+Trying:
+    decode('.--. . .--. ---..')
+Expecting:
+    'PEP8'
+ok
+Trying:
+    encode('SOS')
+Expecting:
+    '... --- ...'
+ok
+Trying:
+    encode('')
+Expecting:
+    ''
+ok
+Trying:
+    encode('THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG')
+Expecting:
+    '- .... .  --.- ..- .. -.-. -.-  -... .-. --- .-- -.  ..-. --- -..-  .---    ..- -- .--. ...  --- ...- . .-.  - .... .  .-.. .- --.. -.--  -.. --- --.'
+ok
+Trying:
+    encode('HELLO, WORLD?')
+Expecting:
+    '.... . .-.. .-.. --- --..--  .-- --- .-. .-.. -.. ..--..'
+ok
+Trying:
+    encode('(-.-//-.-)')
+Expecting:
+    '-.--. -....- .-.-.- -....- -..-. -..-. -....- .-.-.- -....- -.--.-'
+ok
+Trying:
+    encode('PEP8') # doctest: +ELLIPSIS
+Expecting:
+    '.--. . .--. ---...'
+ok
+Trying:
+    try:
+        encode('lowercase')
+    except KeyError:
+        pass
+    else:
+        assert False
+Expecting nothing
+ok
+1 items had no tests:
+    morse
+2 items passed all tests:
+   7 tests in morse.decode
+   7 tests in morse.encode
+14 tests in 3 items.
+14 passed and 0 failed.
+Test passed.
