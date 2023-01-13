@@ -10,9 +10,6 @@ class BasePizza:
     SIZES = ('L', 'XL')
 
     def __init__(self, name: str, size: str, content: Sequence[Ingredient]):
-        if size not in self.SIZES:
-            raise ValueError(f'Pizza size {size} is not supported')
-
         self.size = size
         self.content = content
         self.name = name
@@ -64,7 +61,8 @@ class BasePizza:
                sorted(self.content) == sorted(other.content)
 
     def __repr__(self):
-        return self.name + ': ' + ', '.join(str(x) for x in self.content)
+        return self.name + ' ' + self.size + ': ' + \
+               ', '.join(str(x) for x in self.content)
 
 
 class PizzaEmojiMixin:
@@ -121,4 +119,4 @@ class Hawaiian(PizzaEmojiMixin, BasePizza):
 
 
 if __name__ == '__main__':
-    print(Margherita())
+    print(Margherita('XL'))

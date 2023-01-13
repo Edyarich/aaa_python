@@ -1,8 +1,8 @@
 """Command Line Interface for Pizza Delivery Service"""
 import random
 from typing import (
-    Optional,
     Callable,
+    Optional
 )
 import click
 from pizza import (
@@ -12,10 +12,11 @@ from pizza import (
     Hawaiian
 )
 
+PIZZA_SIZES = BasePizza.SIZES
 MENU = (
-    Margherita(),
-    PepperoniPizza(),
-    Hawaiian()
+    *[Margherita(size=size) for size in PIZZA_SIZES],
+    *[PepperoniPizza(size=size) for size in PIZZA_SIZES],
+    *[Hawaiian(size=size) for size in PIZZA_SIZES]
 )
 MAX_DELIVERY_TIME = 4
 MAX_PICKUP_TIME = 2
@@ -30,7 +31,7 @@ def cli():
     """
 
 
-def log(format_str: Optional[str] = None) -> Callable:
+def log(format_str: str = '') -> Callable:
     """
     Decorator which prints the function name and its return value
     :param format_str: str
@@ -38,13 +39,13 @@ def log(format_str: Optional[str] = None) -> Callable:
     """
     def outer_wrapper(func: Callable) -> Callable:
         nonlocal format_str
-        if format_str is None:
+        if not format_str:
             format_str = func.__name__ + ' - {} seconds!'
 
         def inner_wrapper(*args, **kwargs) -> str:
             result = func(*args, **kwargs)
             nonlocal format_str
-            return format_str.format(result)  # type: ignore
+            return format_str.format(result)
 
         return inner_wrapper
 
@@ -76,30 +77,40 @@ def pickup() -> int:
     return random.randint(0, MAX_PICKUP_TIME)
 
 
-def get_pizza_by_name(pizza_name: str) -> BasePizza:
+def get_pizza_by_name(pizza_name: str, pizza_size: str) -> Optional[BasePizza]:
     """
     Factory method which returns BasePizza instance
     :param pizza_name: str
-    :return: BasePizza
+    :param pizza_size: str
+    :return: Optional[BasePizza]
     """
     for dish in MENU:
-        if isinstance(dish, BasePizza) and dish.name == pizza_name:
+        if isinstance(dish, BasePizza) and dish.name == pizza_name \
+                and dish.size == pizza_size:
             return dish
 
-    return BasePizza(pizza_name, 'L', [])
+    return None
 
 
 @cli.command()
 @click.option('--delivery', default=False, is_flag=True)
+@click.option('--size', default=BasePizza.SIZES[0])
 @click.argument('pizza_name', nargs=1)
-def order(pizza_name: str, delivery: bool):
+def order(pizza_name: str, delivery: bool, size: str):
     """
     API function which prints information about an order
     :param pizza_name: str
     :param delivery: bool
+    :param size: str
     :return: None
     """
-    pizza = get_pizza_by_name(pizza_name)
+    pizza = get_pizza_by_name(pizza_name, size)
+
+    if pizza is None:
+        raise ValueError(
+            f'Pizza with name={pizza_name} and size={size} is not available'
+        )
+
     print(bake(pizza))
 
     if delivery:
